@@ -44,7 +44,7 @@ TIMEOUT_PROFILES = {
 }
 
 # Valid source names for the --search flag
-VALID_SEARCH_SOURCES = {"reddit", "bilibili", "hn", "youtube", "web"}
+VALID_SEARCH_SOURCES = {"zhihu", "weibo", "bilibili", "xiaohongshu", "douyin", "hn", "youtube", "web"}
 
 
 def parse_search_flag(search_str: str) -> set:
@@ -130,6 +130,8 @@ def _install_global_timeout(timeout_seconds: int):
 
 from lib import (
     bilibili,
+    xiaohongshu,
+    zhihu,
     dates,
     dedupe,
     hackernews,
@@ -399,6 +401,62 @@ def _search_bilibili(
         bilibili_error = response["error"]
 
     return bilibili_items, bilibili_error
+
+
+def _search_zhihu(
+    topic: str,
+    from_date: str,
+    to_date: str,
+    depth: str,
+) -> tuple:
+    """Search Zhihu (placeholder - requires API key).
+
+    Returns:
+        Tuple of (zhihu_items, zhihu_error)
+    """
+    zhihu_error = None
+
+    try:
+        response = zhihu.search_and_transcribe(
+            topic, from_date, to_date, depth=depth,
+        )
+    except Exception as e:
+        return [], f"{type(e).__name__}: {e}"
+
+    zhihu_items = zhihu.parse_zhihu_response(response)
+
+    if response.get("error"):
+        zhihu_error = response["error"]
+
+    return zhihu_items, zhihu_error
+
+
+def _search_xiaohongshu(
+    topic: str,
+    from_date: str,
+    to_date: str,
+    depth: str,
+) -> tuple:
+    """Search Xiaohongshu (placeholder - requires API key).
+
+    Returns:
+        Tuple of (xiaohongshu_items, xiaohongshu_error)
+    """
+    xiaohongshu_error = None
+
+    try:
+        response = xiaohongshu.search_and_transcribe(
+            topic, from_date, to_date, depth=depth,
+        )
+    except Exception as e:
+        return [], f"{type(e).__name__}: {e}"
+
+    xiaohongshu_items = xiaohongshu.parse_xiaohongshu_response(response)
+
+    if response.get("error"):
+        xiaohongshu_error = response["error"]
+
+    return xiaohongshu_items, xiaohongshu_error
 
 
 def _search_tiktok(
