@@ -1,0 +1,7 @@
+# last30days-cn 依赖包
+
+# B站 API
+bilibili-api-python>=17.0.0
+
+# 异步支持（如果需要 nest_asyncio）
+# nest_asyncio>=1.5.5
