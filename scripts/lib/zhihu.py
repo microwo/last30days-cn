@@ -1,8 +1,6 @@
-"""Zhihu search placeholder for last30days-cn.
+"""Zhihu search module for last30days-cn.
 
-知乎搜索需要第三方 API（如快代理知乎 API）或自行实现爬虫。
-
-当前状态：框架已实现，等待 API 集成
+支持多种后端：快代理API、官方API、自定义爬虫。
 
 数据映射：
 - voteup_count → 赞同数
@@ -31,9 +29,9 @@ def _log(msg: str):
 
 
 def is_available() -> bool:
-    """Check if Zhihu search is available (requires API key)."""
-    # TODO: Check if API key is configured
-    return False
+    """Check if Zhihu search is available (requires API key or backend)."""
+    import os
+    return bool(os.getenv("ZHIHU_API_KEY") or os.getenv("ZHIHU_BACKEND"))
 
 
 def _compute_relevance(query: str, title: str) -> float:
@@ -55,7 +53,7 @@ async def search_zhihu_async(
     to_date: str,
     depth: str = "default",
 ) -> Dict[str, Any]:
-    """Search Zhihu via API (placeholder).
+    """Search Zhihu via configured backend.
 
     Args:
         topic: Search topic
@@ -66,18 +64,41 @@ async def search_zhihu_async(
     Returns:
         Dict with 'items' list of Q&A metadata dicts.
     """
-    _log(f"Zhihu search requires API key (not yet implemented)")
-    _log(f"Topic: '{topic}', Date range: {from_date} to {to_date}")
+    import os
 
-    # TODO: Implement actual API call when API key is available
-    # Example implementation:
-    # 1. Use 快代理知乎 API: https://www.kuaidaili.com/
-    # 2. Or use custom crawler with authentication
+    backend = os.getenv("ZHIHU_BACKEND", "kuaidaili")
 
-    return {
-        "items": [],
-        "error": "Zhihu search requires API key (not yet implemented)"
-    }
+    _log(f"Using Zhihu backend: {backend}")
+
+    if backend == "kuaidaili":
+        # 使用快代理API
+        try:
+            from . import zhihu_kuaidaili
+            return await zhihu_kuaidaili.search_zhihu_kuaidaili(
+                topic, from_date, to_date, depth
+            )
+        except ImportError:
+            return {
+                "items": [],
+                "error": "Kuaidaili backend requires zhihu_kuaidaili.py and requests library"
+            }
+    elif backend == "official":
+        # 使用官方API（待实现）
+        return {
+            "items": [],
+            "error": "Official Zhihu API not yet implemented (requires enterprise account)"
+        }
+    elif backend == "custom":
+        # 使用自定义爬虫（待实现）
+        return {
+            "items": [],
+            "error": "Custom crawler not yet implemented"
+        }
+    else:
+        return {
+            "items": [],
+            "error": f"Unknown backend: {backend}. Supported: kuaidaili, official, custom"
+        }
 
 
 def search_and_transcribe(
@@ -97,7 +118,6 @@ def search_and_transcribe(
     Returns:
         Dict with 'items' list.
     """
-    import asyncio
     try:
         result = asyncio.run(search_zhihu_async(topic, from_date, to_date, depth))
         return result
